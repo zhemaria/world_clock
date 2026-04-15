@@ -36,6 +36,23 @@
         color: #fff;
         overflow: hidden;
       }
+ /*  ANIMACIÓN SUAVE AL CAMBIAR CIUDAD */
+.display {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.display.fade-out {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.display.fade-in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+
+      
 
       /* ── LAYOUT ─────────────────────────────────────── */
       .app {
@@ -338,26 +355,61 @@
       /* ── State ── */
       let currentCity = CITIES[0];
 
-      function selectCity(idx) {
-        currentCity = CITIES[idx];
-        // update active button
-        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn${idx}`).classList.add('active');
-        // update accent color on root
-        document.documentElement.style.setProperty('--ac', currentCity.ac);
-        document.documentElement.style.setProperty('--gl', currentCity.gl);
-        // update accent ring & hour ticks & hour hand & cap
-        document.getElementById('acRing').setAttribute('stroke', currentCity.ac);
-        document.querySelectorAll('.htick').forEach(t => t.setAttribute('stroke', currentCity.ac));
-        document.getElementById('hHand').setAttribute('stroke', currentCity.ac);
-        document.getElementById('capOuter').setAttribute('fill', currentCity.ac);
-        // update badge
-        document.getElementById('dFlag').textContent = currentCity.flag;
-        document.getElementById('dName').textContent = currentCity.name;
-        document.getElementById('dIcon').textContent = currentCity.icon;
-        // force immediate tick
-        tick();
-      }
+function selectCity(idx) {
+  const display = document.querySelector('.display');
+
+  display.classList.add('fade-out');
+
+  setTimeout(() => {
+    currentCity = CITIES[idx];
+
+    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn${idx}`).classList.add('active');
+
+    document.documentElement.style.setProperty('--ac', currentCity.ac);
+    document.documentElement.style.setProperty('--gl', currentCity.gl);
+
+    document.getElementById('acRing').setAttribute('stroke', currentCity.ac);
+    document.querySelectorAll('.htick').forEach(t => t.setAttribute('stroke', currentCity.ac));
+    document.getElementById('hHand').setAttribute('stroke', currentCity.ac);
+    document.getElementById('capOuter').setAttribute('fill', currentCity.ac);
+
+    document.getElementById('dFlag').textContent = currentCity.flag;
+    document.getElementById('dName').textContent = currentCity.name;
+    document.getElementById('dIcon').textContent = currentCity.icon;
+
+    updateDayNightMode();
+
+    display.classList.remove('fade-out');
+    display.classList.add('fade-in');
+
+    setTimeout(() => display.classList.remove('fade-in'), 400);
+
+    tick();
+  }, 200);
+
+  triggerVibration();
+}
+
+      function triggerVibration() {
+  if (navigator.vibrate) {
+    navigator.vibrate(30);
+  }
+}
+
+      function updateDayNightMode() {
+  const { h } = tzTime(currentCity.tz);
+
+  if (h >= 6 && h < 18) {
+    // Día
+    document.documentElement.style.setProperty('--bg', '#101522');
+    document.documentElement.style.setProperty('--panel', '#151a2e');
+  } else {
+    // Noche
+    document.documentElement.style.setProperty('--bg', '#080b12');
+    document.documentElement.style.setProperty('--panel', '#0e1220');
+  }
+}
 
       /* ── Time helpers ── */
       function tzTime(tz) {
@@ -394,6 +446,7 @@
         rotateHand('sHand', sS * 6);
         document.getElementById('digital').textContent = `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
         document.getElementById('ddate').textContent = tzDate(currentCity.tz);
+        updateDayNightMode();
       }
 
       tick();
