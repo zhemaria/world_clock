@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Relojes del Mundo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Share+Tech+Mono&family=Lora:ital@1&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#080b12" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <style>
+      :root {
+        --bg: #080b12;
+        --panel: #0e1220;
+        --border: rgba(255, 255, 255, 0.07);
+        --gold: #c9a84c;
+        --silver: #8898aa;
+        --ac: #7ae8b4; /* Chicago default */
+        --gl: rgba(122, 232, 180, 0.3);
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+        background: var(--bg);
+        font-family: 'Cinzel', serif;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      /* ── LAYOUT ─────────────────────────────────────── */
+      .app {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center; /* centra todo el bloque verticalmente */
+        height: 100dvh;
+        max-width: 480px;
+        margin: 0 auto;
+        gap: 0.3rem;
+        padding: 0.4rem 0;
+      }
+
+      /* ── HEADER ── */
+      .header {
+        text-align: center;
+        padding: 0 0.5rem 0.05rem;
+        flex-shrink: 0;
+      }
+      .header h1 {
+        font-size: clamp(1.2rem, 3.5vw, 1.1rem);
+        letter-spacing: 0.25em;
+        color: var(--gold);
+        text-shadow: 0 0 20px rgba(201, 168, 76, 0.4);
+        text-transform: uppercase;
+      }
+
+      /* ── CLOCK DISPLAY ── */
+      .display {
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0 0.5rem;
+      }
+
+      /* city badge */
+      .city-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--ac);
+        box-shadow: 0 0 12px var(--gl);
+        transition:
+          border-color 0.3s,
+          box-shadow 0.3s;
+      }
+      .city-badge .flag {
+        font-size: 1.2rem;
+        line-height: 1;
+      }
+      .city-badge .cname {
+        font-size: clamp(0.7rem, 2.8vw, 0.88rem);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ac);
+        transition: color 0.3s;
+      }
+      .city-badge .cicon {
+        font-size: 1rem;
+      }
+
+      /* analog clock */
+      .clock-wrap {
+        position: relative;
+        /* size: fill available space but cap at 240px */
+        width: min(52vw, 240px);
+        height: min(52vw, 240px);
+        flex-shrink: 0;
+      }
+      svg#face {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+
+      /* digital */
+      .digital {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: clamp(2rem, 10vw, 3rem);
+        letter-spacing: 0.08em;
+        color: var(--ac);
+        text-shadow: 0 0 16px var(--gl);
+        transition:
+          color 0.3s,
+          text-shadow 0.3s;
+        line-height: 1;
+      }
+      .ddate {
+        font-family: 'Lora', serif;
+        font-style: italic;
+        font-size: clamp(0.65rem, 2.5vw, 0.8rem);
+        color: var(--silver);
+        letter-spacing: 0.06em;
+      }
+
+      /* ── CITY BUTTONS ── */
+      .btn-grid {
+        flex-shrink: 0;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+        padding: 0.15rem 0.4rem 0.4rem;
+        background: var(--panel);
+        border-top: 1px solid var(--border);
+      }
+      .btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        padding: 0.35rem 0.15rem;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        background: transparent;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          transform 0.15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .btn:active {
+        transform: scale(0.92);
+      }
+      .btn.active {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: var(--btn-ac, var(--gold));
+        box-shadow: 0 0 8px var(--btn-gl, rgba(201, 168, 76, 0.3));
+      }
+      .btn .bicon {
+        font-size: 1.1rem;
+        line-height: 1;
+      }
+      .btn .bname {
+        font-family: 'Cinzel', serif;
+        font-size: clamp(0.38rem, 1.6vw, 0.52rem);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--silver);
+        text-align: center;
+        line-height: 1.2;
+        transition: color 0.2s;
+        /* allow 2-line city names */
+        word-break: break-word;
+        hyphens: auto;
+      }
+      .btn.active .bname {
+        color: #fff;
+      }
+      .btn .bflag {
+        font-size: 0.85rem;
+        line-height: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- HEADER -->
+      <div class="header">
+        <h1>✦ Relojes del Mundo ✦</h1>
+      </div>
+
+      <!-- CLOCK DISPLAY -->
+      <div class="display">
+        <div class="city-badge">
+          <span class="flag" id="dFlag">🇺🇸</span>
+          <span class="cname" id="dName">Chicago</span>
+          <span class="cicon" id="dIcon">🫘</span>
+        </div>
+
+        <div class="clock-wrap">
+          <!-- SVG built by JS -->
+          <svg id="face" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+
+        <div class="digital" id="digital">--:--:--</div>
+        <div class="ddate" id="ddate">···</div>
+      </div>
+
+      <!-- CITY BUTTONS -->
+      <div class="btn-grid" id="btnGrid"></div>
+      <div class="header" style="color: var(--gold); text-shadow: 0 0 20px rgba(201, 168, 76, 0.4); font-size: 0.6rem; padding-top: 0.5rem">José M. Fernández</div>
+    </div>
+
+    <script>
+      const CITIES = [
+        {name: 'Chicago', short: 'Chicago', country: 'EE.UU', tz: 'America/Chicago', i: 0, flag: '🇺🇸', icon: '🫘', ac: '#7ae8b4', gl: 'rgba(122,232,180,.3)'},
+        {name: 'Medellín', short: 'Medellín', country: 'Colombia', tz: 'America/Bogota', i: 1, flag: '🇨🇴', icon: '🌸', ac: '#e8c97a', gl: 'rgba(232,201,122,.3)'},
+        {name: 'Lima', short: 'Lima', country: 'Perú', tz: 'America/Lima', i: 2, flag: '🇵🇪', icon: '🐟', ac: '#7ac9e8', gl: 'rgba(122,201,232,.3)'},
+        {name: 'Madrid', short: 'Madrid', country: 'España', tz: 'Europe/Madrid', i: 3, flag: '🇪🇸', icon: '🐻', ac: '#e87a7a', gl: 'rgba(232,122,122,.3)'},
+        {name: 'Cd. México', short: 'México', country: 'México', tz: 'America/Mexico_City', i: 4, flag: '🇲🇽', icon: '🌮', ac: '#c87ae8', gl: 'rgba(200,122,232,.3)'},
+        {name: 'Caracas', short: 'Caracas', country: 'Vzla', tz: 'America/Caracas', i: 5, flag: '🇻🇪', icon: '⛰️', ac: '#e8a07a', gl: 'rgba(232,160,122,.3)'},
+        {name: 'Santiago', short: 'Santiago', country: 'Chile', tz: 'America/Santiago', i: 6, flag: '🇨🇱', icon: '🏔️', ac: '#7ae8e8', gl: 'rgba(122,232,232,.3)'},
+        {name: 'Quito', short: 'Quito', country: 'Ecuador', tz: 'America/Guayaquil', i: 7, flag: '🇪🇨', icon: '🌍', ac: '#a0e87a', gl: 'rgba(160,232,122,.3)'},
+        {name: 'Bs. Aires', short: 'Bs.Aires', country: 'Arg.', tz: 'America/Argentina/Buenos_Aires', i: 8, flag: '🇦🇷', icon: '💃', ac: '#e87ab4', gl: 'rgba(232,122,180,.3)'},
+        {name: 'La Habana', short: 'Habana', country: 'Cuba', tz: 'America/Havana', i: 9, flag: '🇨🇺', icon: '🚗', ac: '#e8d87a', gl: 'rgba(232,216,122,.3)'},
+        {name: 'San Juan', short: 'S. Juan', country: 'P.Rico', tz: 'America/Puerto_Rico', i: 10, flag: '🇵🇷', icon: '🏰', ac: '#7a9ce8', gl: 'rgba(122,156,232,.3)'},
+        {name: 'Moscú', short: 'Moscú', country: 'Rusia', tz: 'Europe/Moscow', i: 11, flag: '🇷🇺', icon: '🏛️', ac: '#e85050', gl: 'rgba(232, 80, 80,.3)'},
+        {name: 'Pekín', short: 'Pekín', country: 'China', tz: 'Asia/Shanghai', i: 12, flag: '🇨🇳', icon: '🐉', ac: '#ffcc00', gl: 'rgba(255,204,  0,.3)'},
+        {name: 'Tokio', short: 'Tokio', country: 'Japón', tz: 'Asia/Tokyo', i: 13, flag: '🇯🇵', icon: '🌸', ac: '#ffb7c5', gl: 'rgba(255,183,197,.3)'},
+        {name: 'Addis Abeba', short: 'Addis', country: 'Etiopía', tz: 'Africa/Addis_Ababa', i: 14, flag: '🇪🇹', icon: '☕', ac: '#30d090', gl: 'rgba( 48,208,144,.3)'}
+      ];
+
+      /* ── Build SVG face ticks (called once on load, color updated on switch) ── */
+      const face = document.getElementById('face');
+
+      function buildStaticFace() {
+        // gradients
+        face.innerHTML = `
+  <defs>
+    <radialGradient id="fgrd" cx="42%" cy="38%">
+      <stop offset="0%" stop-color="#1c2035"/>
+      <stop offset="100%" stop-color="#070a14"/>
+    </radialGradient>
+    <radialGradient id="bgrd" cx="38%" cy="32%">
+      <stop offset="0%" stop-color="#2e2510"/>
+      <stop offset="100%" stop-color="#14100a"/>
+    </radialGradient>
+  </defs>
+  <circle cx="75" cy="78" r="67" fill="rgba(0,0,0,0.5)"/>
+  <circle cx="75" cy="75" r="68" fill="url(#bgrd)"/>
+  <circle id="acRing" cx="75" cy="75" r="67" fill="none" stroke="#7ae8b4" stroke-width="2.5" opacity="0.4"/>
+  <circle cx="75" cy="75" r="62" fill="url(#fgrd)"/>
+  <circle cx="75" cy="75" r="61" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  `;
+
+        // ticks & numbers
+        for (let i = 0; i < 60; i++) {
+          const isH = i % 5 === 0;
+          const ang = (i / 60) * Math.PI * 2 - Math.PI / 2;
+          const r1 = isH ? 51 : 55,
+            r2 = 59;
+          const x1 = (75 + r1 * Math.cos(ang)).toFixed(2),
+            y1 = (75 + r1 * Math.sin(ang)).toFixed(2);
+          const x2 = (75 + r2 * Math.cos(ang)).toFixed(2),
+            y2 = (75 + r2 * Math.sin(ang)).toFixed(2);
+          const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          tick.setAttribute('x1', x1);
+          tick.setAttribute('y1', y1);
+          tick.setAttribute('x2', x2);
+          tick.setAttribute('y2', y2);
+          tick.setAttribute('stroke', isH ? '#7ae8b4' : 'rgba(255,255,255,0.22)');
+          tick.setAttribute('stroke-width', isH ? '2.5' : '0.9');
+          tick.setAttribute('stroke-linecap', 'round');
+          if (isH) tick.classList.add('htick');
+          face.appendChild(tick);
+
+          if (isH) {
+            const n = i === 0 ? 12 : i / 5,
+              rn = 42;
+            const xn = (75 + rn * Math.cos(ang)).toFixed(2),
+              yn = (75 + rn * Math.sin(ang)).toFixed(2);
+            const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            txt.setAttribute('x', xn);
+            txt.setAttribute('y', yn);
+            txt.setAttribute('text-anchor', 'middle');
+            txt.setAttribute('dominant-baseline', 'central');
+            txt.setAttribute('font-family', 'Cinzel,serif');
+            txt.setAttribute('font-size', '8.5');
+            txt.setAttribute('font-weight', '700');
+            txt.setAttribute('fill', 'rgba(255,255,255,0.58)');
+            txt.textContent = n;
+            face.appendChild(txt);
+          }
+        }
+
+        // hands
+        const hands = `
+  <line id="hHand" x1="75" y1="75" x2="75" y2="42" stroke="#7ae8b4" stroke-width="5" stroke-linecap="round"/>
+  <line id="mHand" x1="75" y1="75" x2="75" y2="25" stroke="#ffffff" stroke-width="3"  stroke-linecap="round"/>
+  <line id="sHand" x1="75" y1="85" x2="75" y2="18" stroke="#ff4040" stroke-width="1.8" stroke-linecap="round"/>
+  <circle id="capOuter" cx="75" cy="75" r="5.5" fill="#7ae8b4"/>
+  <circle cx="75" cy="75" r="2.5" fill="#fff" opacity="0.9"/>`;
+        face.insertAdjacentHTML('beforeend', hands);
+      }
+
+      buildStaticFace();
+
+      /* ── Build city buttons ── */
+      const btnGrid = document.getElementById('btnGrid');
+      CITIES.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'btn' + (c.i === 0 ? ' active' : '');
+        btn.style.setProperty('--btn-ac', c.ac);
+        btn.style.setProperty('--btn-gl', c.gl);
+        btn.innerHTML = `<span class="bflag">${c.flag}</span><span class="bicon">${c.icon}</span><span class="bname">${c.short}</span>`;
+        btn.addEventListener('click', () => selectCity(c.i));
+        btn.id = `btn${c.i}`;
+        btnGrid.appendChild(btn);
+      });
+
+      /* ── State ── */
+      let currentCity = CITIES[0];
+
+      function selectCity(idx) {
+        currentCity = CITIES[idx];
+        // update active button
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn${idx}`).classList.add('active');
+        // update accent color on root
+        document.documentElement.style.setProperty('--ac', currentCity.ac);
+        document.documentElement.style.setProperty('--gl', currentCity.gl);
+        // update accent ring & hour ticks & hour hand & cap
+        document.getElementById('acRing').setAttribute('stroke', currentCity.ac);
+        document.querySelectorAll('.htick').forEach(t => t.setAttribute('stroke', currentCity.ac));
+        document.getElementById('hHand').setAttribute('stroke', currentCity.ac);
+        document.getElementById('capOuter').setAttribute('fill', currentCity.ac);
+        // update badge
+        document.getElementById('dFlag').textContent = currentCity.flag;
+        document.getElementById('dName').textContent = currentCity.name;
+        document.getElementById('dIcon').textContent = currentCity.icon;
+        // force immediate tick
+        tick();
+      }
+
+      /* ── Time helpers ── */
+      function tzTime(tz) {
+        const now = new Date();
+        const d = new Date(now.toLocaleString('en-US', {timeZone: tz}));
+        return {h: d.getHours(), m: d.getMinutes(), s: d.getSeconds(), ms: now.getMilliseconds()};
+      }
+      function tzDate(tz) {
+        return new Date().toLocaleDateString('es-MX', {
+          timeZone: tz,
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+      }
+      function pad2(n) {
+        return String(n).padStart(2, '0');
+      }
+
+      function rotateHand(id, deg) {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('transform', `rotate(${deg.toFixed(3)},75,75)`);
+      }
+
+      /* ── Main tick ── */
+      function tick() {
+        const {h, m, s, ms} = tzTime(currentCity.tz);
+        const sS = s + ms / 1000;
+        const mS = m + sS / 60;
+        const hS = (h % 12) + mS / 60;
+        rotateHand('hHand', hS * 30);
+        rotateHand('mHand', mS * 6);
+        rotateHand('sHand', sS * 6);
+        document.getElementById('digital').textContent = `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+        document.getElementById('ddate').textContent = tzDate(currentCity.tz);
+      }
+
+      tick();
+      setInterval(tick, 200);
+      <script>
+  // Registro SW
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js");
+    });
+  }
+
+  // Instalación manual
+  let deferredPrompt;
+  const installBtn = document.createElement("button");
+  installBtn.textContent = "Instalar App";
+  installBtn.style.position = "fixed";
+  installBtn.style.bottom = "20px";
+  installBtn.style.right = "20px";
+  installBtn.style.padding = "10px 16px";
+  installBtn.style.borderRadius = "20px";
+  installBtn.style.border = "none";
+  installBtn.style.background = "#c9a84c";
+  installBtn.style.color = "#000";
+  installBtn.style.fontWeight = "bold";
+  installBtn.style.display = "none";
+  installBtn.style.zIndex = "9999";
+  document.body.appendChild(installBtn);
+
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = "block";
+  });
+
+  installBtn.addEventListener("click", async () => {
+    installBtn.style.display = "none";
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  });
+</script>
+    </script>
+  </body>
+</html>
