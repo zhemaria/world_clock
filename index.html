@@ -452,11 +452,26 @@ function selectCity(idx) {
 }
 
       /* ── Time helpers ── */
-      function tzTime(tz) {
-        const now = new Date();
-        const d = new Date(now.toLocaleString('en-US', {timeZone: tz}));
-        return {h: d.getHours(), m: d.getMinutes(), s: d.getSeconds(), ms: now.getMilliseconds()};
-      }
+function tzTime(tz) {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+
+  const parts = formatter.formatToParts(now);
+
+  const h = parseInt(parts.find(p => p.type === 'hour').value);
+  const m = parseInt(parts.find(p => p.type === 'minute').value);
+  const s = parseInt(parts.find(p => p.type === 'second').value);
+
+  return { h, m, s, ms: now.getMilliseconds() };
+}
+
+      
       function tzDate(tz) {
         return new Date().toLocaleDateString('es-MX', {
           timeZone: tz,
@@ -489,8 +504,12 @@ function selectCity(idx) {
         updateDayNightMode();
       }
 
-      tick();
-      setInterval(tick, 200);
+function loop() {
+  tick();
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
       
   // Registro SW
   if ("serviceWorker" in navigator) {
