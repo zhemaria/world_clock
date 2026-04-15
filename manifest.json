@@ -2,7 +2,7 @@
   "name": "Relojes del Mundo",
   "short_name": "Relojes",
   "description": "Reloj mundial analógico y digital con múltiples zonas horarias.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
