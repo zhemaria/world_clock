@@ -51,9 +51,49 @@
   transform: scale(1);
 }
 
+.sky {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
 
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: twinkle 2s infinite alternate;
+}
+
+@keyframes twinkle {
+  from { opacity: 0.3; }
+  to { opacity: 1; }
+}
       
+.sun-glow {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255,200,120,0.25) 0%, transparent 70%);
+  top: -100px;
+  right: -100px;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.5s;
+}
 
+      .display {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 0.6rem 0.5rem;
+  z-index: 1;
+}
+      
       /* ── LAYOUT ─────────────────────────────────────── */
       .app {
         display: flex;
@@ -488,6 +528,74 @@ function selectCity(idx) {
     await deferredPrompt.userChoice;
     deferredPrompt = null;
   });
+
+      function updateDayNightMode() {
+  const { h } = tzTime(currentCity.tz);
+
+  const root = document.documentElement;
+
+  if (h >= 5 && h < 8) {
+    // 🌅 Amanecer
+    root.style.setProperty('--bg', '#1b1f3a');
+    root.style.setProperty('--panel', '#2a2045');
+  } 
+  else if (h >= 8 && h < 17) {
+    // ☀️ Día pleno
+    root.style.setProperty('--bg', '#101522');
+    root.style.setProperty('--panel', '#151a2e');
+  } 
+  else if (h >= 17 && h < 20) {
+    // 🌇 Atardecer
+    root.style.setProperty('--bg', '#2a1a1a');
+    root.style.setProperty('--panel', '#3a2222');
+  } 
+  else {
+    // 🌙 Noche
+    root.style.setProperty('--bg', '#080b12');
+    root.style.setProperty('--panel', '#0e1220');
+  }
+
+  updateSkyEffects(h);
+}
+const sky = document.createElement("div");
+sky.className = "sky";
+document.body.appendChild(sky);
+
+function generateStars() {
+  sky.innerHTML = "";
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement("div");
+    star.className = "star";
+    star.style.top = Math.random() * 100 + "%";
+    star.style.left = Math.random() * 100 + "%";
+    star.style.animationDelay = Math.random() * 2 + "s";
+    sky.appendChild(star);
+  }
+}
+    const sunGlow = document.createElement("div");
+sunGlow.className = "sun-glow";
+document.body.appendChild(sunGlow);
+
+      function updateSkyEffects(h) {
+
+  if (h >= 20 || h < 5) {
+    // 🌙 Noche
+    sky.style.display = "block";
+    sunGlow.style.opacity = "0";
+    generateStars();
+  } 
+  else if (h >= 8 && h < 17) {
+    // ☀️ Día
+    sky.style.display = "none";
+    sunGlow.style.opacity = "1";
+  } 
+  else {
+    // 🌅 Amanecer / Atardecer
+    sky.style.display = "none";
+    sunGlow.style.opacity = "0.4";
+  }
+}
+      
 </script>
     
   </body>
